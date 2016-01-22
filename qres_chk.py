@@ -1,5 +1,4 @@
 import sys
-import re
 from collections import OrderedDict
 from collections import defaultdict
 
@@ -14,11 +13,10 @@ class ResTpl:
         :param str: line in the qres file
         :return: null
         """
-        str_arr = re.split(' ',str)
-        if len(str_arr) != 6:
-            str_arr = str.split('\t',str)
-            if len(str_arr) != 6:
-                print >> sys.stderr, 'Error in format'
+        str_arr = str.strip().split()
+        # print str_arr
+        if len(str_arr) <  6:
+            print >> sys.stderr, 'Error in format'
         self._qid = str_arr[0]
         self._doc = str_arr[2]
         self._rank = str_arr[3]
@@ -88,8 +86,9 @@ class Qres:
         self._ties = {}
         with open(fname,"r") as fin:
             for line in fin:
-                tpl = ResTpl(line)
-                self._run[tpl.get_qid()].append(tpl)
+                if len(line.strip()) > 1:
+                    tpl = ResTpl(line)
+                    self._run[tpl.get_qid()].append(tpl)
         fin.close()
         #Go back to qid order, I am lazy for post hoc processing in R
         self._run = OrderedDict(sorted(self._run.iteritems(),reverse=False))
@@ -146,6 +145,21 @@ class Qres:
             self._run[k].sort(key=lambda x:(x.get_score(),x.get_doc()),reverse=True)
             for r in self._run[k]:
                 print r.get_str()
+
+    def get_qid_set(self):
+        """
+        get all the qids
+        :return: qids avaiable in current run
+        """
+        return self._run.keys()
+
+    def get_res_by_id(self,qid):
+        """
+        the current res of the given qid
+        :param qid:
+        :return:
+        """
+        return self._run[qid]
 
 
 
